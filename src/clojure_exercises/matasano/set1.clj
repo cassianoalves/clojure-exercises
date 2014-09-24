@@ -8,7 +8,7 @@
     (apply array-map (interleave "0123456789abcdef" (range 0 16))))
 
 (def base64Map
-    (apply array-map (interleave "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" (range 0 64))))
+    (apply array-map (interleave (range -1 64) "=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")))
 
 (defn divideNibble [nib]
   (seq [(bit-shift-right nib 2) (bit-and nib 2r0011)]))
@@ -21,9 +21,18 @@
          (map divideNibble
               (hex2nibbleseq hex))))
 
+(defn third [col] (nth col 2))
+
+(defn join3Nibbles [nibs]
+  (+ (bit-shift-left (first nibs) 4)
+     (bit-shift-left (second nibs) 2)
+     (third nibs)))
+
 (defn halfNibble2SixBits [hn]
-  (partition-all 3 hn))
+  (map join3Nibbles (partition-all 3 hn)))
 
 (defn hex2base64 [in]
-  "")
-
+  (apply str
+         (map base64Map
+              (halfNibble2SixBits
+               (hex2HalfNibble in)))))
